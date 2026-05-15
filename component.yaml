@@ -1,0 +1,8 @@
+# $schema: https://raw.githubusercontent.com/digital-asset/dpm/refs/heads/main/schema/component.v1.schema.json
+apiVersion: digitalasset.com/v1
+kind: Component
+spec:
+  commands:
+    - path: bin/canton-scaffold.sh
+      name: canton-scaffold
+      desc: "Scaffold a Canton Network application project (canton-dapp, canton-token-app, canton-validator-app)"
