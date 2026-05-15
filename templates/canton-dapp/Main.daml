@@ -1,0 +1,38 @@
+module Main where
+
+import Daml.Script
+
+template Asset
+  with
+    owner    : Party  
+    provider : Party  
+    name     : Text   
+    metadata : Text   
+  where
+    signatory owner, provider
+    observer  owner
+    choice Transfer : ContractId Asset
+      with
+        newOwner : Party
+      controller owner
+      do
+        create this with owner = newOwner
+    choice Archive_Asset : ()
+      controller owner, provider
+      do
+        return ()
+
+setup : Script ()
+setup = script do
+  provider <- allocatePartyWithHint "Provider" (PartyIdHint "Provider")
+  alice    <- allocatePartyWithHint "Alice"    (PartyIdHint "Alice")
+  assetCid <- submit provider do
+    createCmd Asset with
+      owner    = alice
+      provider = provider
+      name     = "My First Canton Asset"
+      metadata = "{\"type\": \"example\"}"
+  bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
+  submit alice do
+    exerciseCmd assetCid Transfer with newOwner = bob
+  return ()

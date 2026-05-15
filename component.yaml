@@ -5,4 +5,4 @@ spec:
   commands:
     - path: bin/canton-scaffold.sh
       name: canton-scaffold
-      desc: "Scaffold a Canton Network application project (canton-dapp, canton-token-app, canton-validator-app)"
+      desc: "Scaffold a Canton Network projects"

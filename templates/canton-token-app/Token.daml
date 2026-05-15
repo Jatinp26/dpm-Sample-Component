@@ -1,0 +1,65 @@
+module Token where
+
+import Daml.Script
+
+template TokenHolding
+  with
+    issuer   : Party    
+    owner    : Party    
+    amount   : Decimal  
+    symbol   : Text    
+  where
+    signatory issuer
+    observer  owner
+    choice TokenTransfer : ContractId TokenHolding
+      with
+        recipient : Party
+        quantity  : Decimal
+      controller owner
+      do
+        assertMsg "Transfer amount must be positive" (quantity > 0.0)
+        assertMsg "Cannot transfer more than held amount" (quantity <= amount)
+        _ <- if amount - quantity > 0.0
+          then do
+            cid <- create this with amount = amount - quantity
+            return (Some cid)
+          else return None
+        create this with
+          owner  = recipient
+          amount = quantity
+
+    choice Mint : ContractId TokenHolding
+      with
+        recipient  : Party
+        mintAmount : Decimal
+      controller issuer
+      do
+        assertMsg "Mint amount must be positive" (mintAmount > 0.0)
+        create TokenHolding with
+          issuer = issuer
+          owner  = recipient
+          amount = mintAmount
+          symbol = symbol
+    choice Burn : ()
+      controller owner, issuer
+      do return ()
+
+setup : Script ()
+setup = script do
+  issuer <- allocatePartyWithHint "TokenIssuer" (PartyIdHint "TokenIssuer")
+  alice  <- allocatePartyWithHint "Alice"        (PartyIdHint "Alice")
+  bob    <- allocatePartyWithHint "Bob"          (PartyIdHint "Bob")
+
+  holdingCid <- submit issuer do
+    createCmd TokenHolding with
+      issuer = issuer
+      owner  = alice
+      amount = 1000.0
+      symbol = "MYTKN"
+
+  submit alice do
+    exerciseCmd holdingCid TokenTransfer with
+      recipient = bob
+      quantity  = 250.0
+
+  return ()
