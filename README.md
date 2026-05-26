@@ -2,8 +2,14 @@
 A DPM component that adds `dpm canton-scaffold` to Scaffold project starters.
 
 ## Requirements
-- DPM 1.0.14+ (bundled with SDK 3.5+)
-- Docker + Docker Compose (for `canton-dapp` and `canton-validator-app`)
+
+- DPM 1.0.14+ (bundled with SDK 3.5.0+)
+
+```bash
+DPM_REGISTRY=europe-docker.pkg.dev/da-images/public-unstable dpm install 3.5.2-snapshot.20260514.586.0.v15742f1c
+```
+
+- Docker Desktop
 
 ## Install (as a consumer)
 
