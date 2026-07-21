@@ -1,120 +1,50 @@
-# Sample DPM Component
-A DPM component that adds `dpm canton-scaffold` to Scaffold project starters.
+# dpm-tools
 
-## Requirements
+Example [dpm](https://github.com/digital-asset/dpm) components — CLI extensions
+that `dpm` discovers and runs as subcommands. Use them as-is, or as a starting
+point for building your own dpm extension.
 
-- DPM 1.0.14+ (bundled with SDK 3.5.0+)
+| Tool | What it does |
+|------|--------------|
+| [`canton-scaffold`](examples/canton-scaffold/) | Example canton scaffolding extension |
+| [`rst-to-mdx`](examples/rst-to-mdx/) | Convert reStructuredText into Mintlify-compatible MDX |
+| [`mdx-validate`](examples/mdx-validate/) | Validate Mintlify MDX documentation files |
 
-```bash
-DPM_REGISTRY=europe-docker.pkg.dev/da-images/public-unstable dpm install 3.5.2-snapshot.20260514.586.0.v15742f1c
+Each examples's README covers building it, running it through `dpm`, and publishing
+it as an OCI component.
+
+## Prerequisites: install dpm
+
+These are extensions to the `dpm` CLI, so you need `dpm` on your `PATH` to build
+or run them. The easiest way is to pull a prebuilt binary straight from a
+[dpm GitHub release](https://github.com/digital-asset/dpm/releases).
+
+Release assets are named `dpm-<version>-<os>-<arch>.tar.gz`, where `os` is one of
+`darwin` / `linux` / `windows` and `arch` is `amd64` or `arm64`. Grab the archive
+for your platform, unpack it (goreleaser strips the directory, so the tarball
+holds a bare `dpm` binary), and put it on your `PATH`.
+
+With the GitHub CLI (resolves the latest release for you):
+
+```sh
+# macOS Apple silicon — swap the pattern for your os/arch
+gh release download --repo digital-asset/dpm --pattern 'dpm-*-darwin-arm64.tar.gz'
+tar -xzf dpm-*-darwin-arm64.tar.gz
+sudo mv dpm /usr/local/bin/            # or anywhere on your PATH
+dpm --version
 ```
 
-- Docker Desktop
+Or download a specific version directly, no `gh` required:
 
-## Install (as a consumer)
-
-Add to your `daml.yaml`. Do **not** include `sdk-version` when using `components:` as DPM does not allow both simultaneously.
-
-```yaml
-name: my-project
-source: daml
-version: 0.0.1
-dependencies:
-  - daml-prim
-  - daml-stdlib
-
-components:
-  - oci://ghcr.io/.../components/canton-scaffold:0.1.0
+```sh
+VERSION=1.0.21                         # check the releases page for the latest
+curl -fSL -o dpm.tar.gz \
+  "https://github.com/digital-asset/dpm/releases/download/${VERSION}/dpm-${VERSION}-darwin-arm64.tar.gz"
+tar -xzf dpm.tar.gz && sudo mv dpm /usr/local/bin/
 ```
 
-```bash
-dpm install package
-```
+Windows ships a standalone `dpm-<version>-windows-amd64.exe` on the same release.
+Each release also publishes a `dpm-<version>-checksums.txt` for verification.
 
-After install, make the script executable (required on macOS/Linux):
-
-```bash
-chmod +x ~/.dpm/cache/components/.../canton-scaffold/0.1.0/bin/canton-scaffold.sh
-```
-
-This installs the component and makes `dpm canton-scaffold` available.
-
-## Usage
-
-```bash
-# List available templates
-dpm canton-scaffold list
-
-# e.g. Scaffold a CIP-0056 token app
-dpm canton-scaffold canton-token-app my-token
-```
-
-## Publish (for component maintainers)
-
-Before publishing, ensure the script is executable, this permission must be set in your working directory before the OCI push, as it does not survive the archive without it:
-
-### component.yaml schema
-
-```yaml
-# $schema: https://raw.githubusercontent.com/digital-asset/dpm/refs/heads/main/schema/component.v1.schema.json
-apiVersion: digitalasset.com/v1
-kind: Component
-spec:
-  commands:
-    - path: bin/canton-scaffold.sh
-      name: canton-scaffold
-      desc: "Scaffold a Canton Network application project"
-```
-
-### Local registry testing
-
-```bash
-# Start a local OCI registry
-docker run -d -p 5001:5000 --name oci-registry registry:2
-
-# Verify it's running
-curl http://localhost:5001/v2/
-
-# Dry run to validate manifest
-DPM_SDK_VERSION=3.5.2-snapshot.20260514.586.0.v15742f1c \
-  dpm publish component oci://localhost:5001/canton-scaffold:0.1.0 \
-    --platform generic="." \
-    --dry-run
-
-# Publish
-DPM_SDK_VERSION=3.5.2-snapshot.20260514.586.0.v15742f1c \
-  dpm publish component oci://localhost:5001/canton-scaffold:0.1.0 \
-    --platform generic="." \
-    --insecure
-```
-
-> **Note:** `--insecure` must be passed as a CLI flag to `dpm publish component`. 
-
-### Production registry
-
-```bash
-dpm publish component oci://ghcr.io/.../components/canton-scaffold:0.1.0 \
-    --platform generic="."
-```
-
-## Known issues and gotchas
-
-| Issue | Detail |
-|---|---|
-| `sdk-version` + `components:` conflict | DPM does not allow both in `daml.yaml`. Remove `sdk-version` when using `components:`. |
-| `--insecure` not in `dpm install package` | The flag doesn't exist there. Use `insecure: true` in `dpm-config.yaml` instead for local registry consumption. |
-| Script permission denied after install | Run `chmod +x ~/.dpm/cache/components/.../bin/canton-scaffold.sh` after `dpm install package`. |
-| Consumer side external registry (3.4.x) | `override-components` registry key is silently ignored on 3.4.x. Full consume loop requires DPM 3.5+. Confirmed on 3.4.11. |
-
-## Local Development
-
-```bash
-./bin/canton-scaffold.sh list
-./bin/canton-scaffold.sh info canton-dapp
-./bin/canton-scaffold.sh canton-dapp test-project
-```
-
-## Resources
-
-- Canton Network developer docs: https://docs.canton.network
-- CIP-0056 Token Standard: https://github.com/canton-foundation/cips/blob/main/cip-0056/cip-0056.md
+Once `dpm` is installed, follow the tool's README to build and register the
+component for local development.
